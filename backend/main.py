@@ -1,39 +1,77 @@
-# This is a sample Python script.
+import string
+from webbrowser import get
+from src.GamePlatform import GamePlatform
+from backend.src.Game_API.GameAPI import GameAPI
+from flask import Flask, request, jsonify
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-import pandas as pd
-from nba_api.stats.endpoints import drafthistory
-from nba_api.stats.endpoints import playerindex
-from nba_api.stats.static import players
-import random
-
-
-# Anthony Davis
-
-def print_hi(name):
-    try:
-        # just playing around with API
-        draft_2023 = drafthistory.DraftHistory(league_id="00",season_year_nullable=2010,round_num_nullable=1,overall_pick_nullable=1).get_data_frames()[0]
-        availableYears = [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
-        lakers = playerindex.PlayerIndex(league_id="00",season="2023")
-        players_df = lakers.get_data_frames()[0]
-        year = random.choice(availableYears)
-        years_df = players_df[players_df["DRAFT_YEAR"] == year]
-        player_selection = years_df.sample()
-        lebron = players.find_players_by_full_name("Kevi Dur")
-        print(lebron)
-        print(player_selection)
-        print(draft_2023["TEAM_NAME"])
-        print("bruh")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+app = Flask(__name__)
+api = GameAPI()
+game = GamePlatform()
 
 
+@app.route('/guess_player', methods=['POST'])
+def guess_player():
+    if request.method == 'POST':
+        data = request.get_json()
+        player_name = data['player_name']
+        poeltl_name = data['poeltl_name']
+        res = game.submit_answer(player_name, poeltl_name)
+        if isinstance(res,str):
+            return jsonify({
+                "data": res
+            })
+        return jsonify({
+            "result": res['result'],
+            "data": {
+                "year": {
+                    "value": res["d_year"],
+                    "score": res["year_score"].name,
+                    "dir": res["year_dir"].name,
+                },
+                "round": {
+                    "value": res["d_round"],
+                    "score": res["round_score"].name,
+                },
+                "pick": {
+                    "value": res["d_pick"],
+                    "score": res["pick_score"].name,
+                    "dir": res["pick_dir"].name,
+                },
+                "college": {
+                    "value": res["d_college"],
+                    "score": res["col_score"].name,
+                },
+                "team": {
+                    "value": res["d_team"],
+                    "score": res["team_score"].name,
+                },
+                "position": {
+                    "value": res["pos"],
+                    "score": res["pos_score"].name
+                }
+            }
+        })
 
-# Press the green button in the gutter to run the script.
+
+@app.route('/get_poeltl_player', methods=['GET'])
+def get_poeltl_player():
+    game.set_new_player()
+    name = game.get_poeltl_player_name()
+    college = game.get_poeltl_player_college()
+    return jsonify({
+        "name": name,
+        "college": college,
+    }), 200
+
+
+def guess_player_2(player_name):
+    res = game.submit_answer(player_name)
+    print(res)
+    return "Guessing player"
+
+
+# Run the app
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    app.run(debug=True, port=8080)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+

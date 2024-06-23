@@ -1,4 +1,3 @@
-
 class Player:
     def __init__(self, ids, d_year, d_round, d_pick, d_team, d_college, d_pos):
         self.id = ids  # Int: unique player id
@@ -23,6 +22,9 @@ class Player:
 
     def get_d_team(self):
         return self.d_team
+
+    def get_player_dict(self):
+        return {key: value for key, value in self.__dict__.items() if not key.startswith("__")}
 
     # compares players and returns a guess score
 

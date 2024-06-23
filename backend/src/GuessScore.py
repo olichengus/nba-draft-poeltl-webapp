@@ -1,8 +1,9 @@
 from enum import Enum
-from src.Player import Player
+from backend.src.Player import Player
 
 
 class Direction(Enum):
+    SAME = 0
     UP = 1
     DOWN = -1
 
@@ -15,6 +16,7 @@ class Status(Enum):
 
 class GuessScore:
     def __init__(self):
+        self.result = None
         self.year_dir = None
         self.year_score = None
         self.round_score = None
@@ -28,8 +30,10 @@ class GuessScore:
         if not isinstance(player1,Player) or not isinstance(player2,Player):
             raise Exception("a player is missing")
         if player1.id == player2.id:
+            self.result = "correct"
             self.green_everything()
         else:
+            self.result = "wrong"
             self.calculate_year_scores(player1.d_year, player2.d_year)
             self.calculate_round_scores(player1.d_round, player2.d_round)
             self.calculate_pick_scores(player1.d_pick, player2.d_pick)
@@ -39,7 +43,8 @@ class GuessScore:
         return self.make_result_dict()
 
     def make_result_dict(self):
-        ret = {'year_score': self.year_score, 'year_dir': self.year_dir, 'round_score': self.round_score,
+        ret = {'result': self.result,
+                'year_score': self.year_score, 'year_dir': self.year_dir, 'round_score': self.round_score,
                'pick_score': self.pick_score, 'pick_dir': self.pick_dir, 'col_score': self.col_score,
                'pos_score': self.pos_score, 'team_score': self.team_score}
         return ret
@@ -57,6 +62,7 @@ class GuessScore:
     def calculate_year_scores(self, d_year1, d_year2):
         if d_year1 == d_year2:
             self.year_score = Status.GREEN
+            self.year_dir = Direction.SAME
         else:
             if d_year1 > d_year2:
                 self.year_dir = Direction.UP
@@ -76,6 +82,7 @@ class GuessScore:
 
     def calculate_pick_scores(self, p1, p2):
         if p1 == p2:
+            self.pick_dir = Direction.SAME
             self.pick_score = Status.GREEN
         else:
             if p1 > p2:
