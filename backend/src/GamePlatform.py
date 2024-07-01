@@ -5,6 +5,10 @@ from backend.src.Game_API.GameAPI import GameAPI
 from backend.src.Player import Player
 
 
+def find_lists_of_players_full_name(player_name):
+    return players.find_players_by_full_name(player_name)
+
+
 class GamePlatform:
     def __init__(self):
         self.gameAPI = GameAPI()

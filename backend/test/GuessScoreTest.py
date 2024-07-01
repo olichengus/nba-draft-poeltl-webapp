@@ -3,6 +3,7 @@ from enum import Enum
 from backend.src.GuessScore import Status, Direction, GuessScore
 from backend.src.Player import Player
 from backend.src.GamePlatform import GamePlatform
+from backend.src.GamePlatform import find_lists_of_players_full_name
 
 
 class TestGuessScore(unittest.TestCase):
@@ -43,6 +44,13 @@ class TestGuessScore(unittest.TestCase):
         gamePlatform = GamePlatform()
         gamePlatform.set_new_player()
         self.assertIsNotNone(gamePlatform.poeltlPlayer)
+
+    def test_list_players(self):
+        player_full_name = "vic"
+        res = find_lists_of_players_full_name(player_full_name)
+        res_active = [x for x in res if x["is_active"]]
+        res_full_names = [active_player['full_name'] for active_player in res_active]
+        print(res_full_names)
 
 
 if __name__ == '__main__':

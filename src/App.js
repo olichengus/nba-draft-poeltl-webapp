@@ -2,12 +2,26 @@
 import './App.css';
 import React from 'react';
 import { useEffect, useState } from 'react';
+import {Button, Grid, GridItem, HStack} from "@chakra-ui/react";
+import {ReactNode} from "react";
+import {
+    AutoComplete,
+    AutoCompleteInput,
+    AutoCompleteItem,
+    AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
+
+const GREY = 'grey';
+const GREEN = 'green-500';
+const YELLOW = 'yellow'
+
 function App() {
   const [poeltlPlayer, setPoeltlPlayer] = useState("");
   const [guessedPlayer, setGuessedPlayer] = useState("");
   const [hint, setHint] = useState("");
   const [guesses, setGuesses] = useState([]);
-  const [correctGuess, setCorrectGuess] = useState(false);
+  const [gameFinished, setGameFinished] = useState(false);
+  const [options, setOptions] = useState([]);
 
   function fetchPoeltlPlayer() {
       fetch('/api/get_poeltl_player').then(res=>
@@ -22,6 +36,9 @@ function App() {
   }
 
   function handleGuess(){
+      console.log("Handling Guess");
+      console.log(guessedPlayer);
+      console.log(poeltlPlayer);
       fetch('/api/guess_player', {
           method: 'POST',
           headers: {
@@ -34,13 +51,14 @@ function App() {
         }).then(
           res => res.json().then(
               data=>{
+                  console.log("data fetched");
                   const guess = data.data;
                   const result = data.result;
                   if (typeof guess === 'string'){
                       return ;
                   } else {
                       setGuesses(guesses => [...guesses, guess]);
-                    result === 'wrong' ? setCorrectGuess(false): setCorrectGuess(true)
+                      result === 'wrong' ? setGameFinished(false): setGameFinished(true)
                   }
               }
           ))
@@ -49,7 +67,31 @@ function App() {
   useEffect(()=> {
       console.log("Fetching Player")
       fetchPoeltlPlayer()
-  },[])
+  },[]);
+
+
+  useEffect(()=> {
+        console.log("Fetching Available Guesses");
+        if (guessedPlayer.length > 2) {
+            fetchPlayerOptions(guessedPlayer);
+        }
+    },[guessedPlayer]);
+
+    function fetchPlayerOptions(player_search){
+        return fetch(`/api/get_players?player_full_name=${player_search}`)
+            .then(res => res.json())
+            .then(data => {
+                setOptions(data.data);
+            });
+        }
+
+
+  function renderGuesses(): ReactNode{
+      return(
+          <GridItem>{JSON.stringify(guesses)}</GridItem>
+      );
+  }
+
 
   return (
     <div className="App">
@@ -57,9 +99,27 @@ function App() {
         <p>
           Poeltl player is {poeltlPlayer} from {hint}
         </p>
+          <HStack>
+              <AutoComplete color="black" openOnFocus>
+                  <AutoCompleteInput variant="filled" />
+                  <AutoCompleteList>
+                      {options.map((option) => (
+                          <AutoCompleteItem
+                              key={option}
+                              value={option}
+                              textTransform="capitalize"
+                          >
+                              {option}
+                          </AutoCompleteItem>
+                      ))}
+                  </AutoCompleteList>
+              </AutoComplete>
+              <Button>Guess</Button>
+          </HStack>
       </header>
-        <div>
-        </div>
+        <Grid color='blue'>
+            {renderGuesses()}
+        </Grid>
     </div>
   );
 }
