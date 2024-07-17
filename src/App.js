@@ -2,13 +2,15 @@
 import './App.css';
 import React from 'react';
 import { useEffect, useState } from 'react';
-import {Button, GridItem, HStack, Table, Thead} from "@chakra-ui/react";
+import {Button , HStack, VStack} from "@chakra-ui/react";
 import {
     AutoComplete,
     AutoCompleteInput,
     AutoCompleteItem,
     AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
+import PickSelection from './pick-selection/PickSelection';
+import { render } from '@testing-library/react';
 
 const GREY = 'grey';
 const GREEN = 'green-500';
@@ -43,21 +45,34 @@ function App() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                player_name: guessedPlayer,
+                player_name: selected,
                 poeltl_name: poeltlPlayer
             })
           }).then(
             res => res.json().then(
                 data=>{
                     console.log("data fetched");
+                    console.log(data);
                     const guess = data.data;
                     const result = data.result;
+                    let player_name;
                     if (typeof guess === 'string'){
                         return ;
+                    } else if (result === 'wrong'){
+                        player_name = {
+                            value: selected,
+                            score: "GREY"
+                        }
+                        setGameFinished(false)
                     } else {
-                        setGuesses(guesses => [...guesses, guess]);
-                        result === 'wrong' ? setGameFinished(false): setGameFinished(true)
+                        player_name = {
+                            value: selected,
+                            score: "GREEN"
+                        };
+                         setGameFinished(true)
                     }
+                    guess['player_name'] = player_name;
+                    setGuesses(guesses => [...guesses, guess]);
                 }
             ));
     }
@@ -83,7 +98,15 @@ function App() {
                 setOptions(data.data);
             });
         }
+    
 
+    function renderGuesses(){
+        return guesses.map((guess, index) => {
+            return (
+                <PickSelection pickNumber={index + 1} guess={guess} />
+            );
+        });
+    }
 
   return (
     <div className="App">
@@ -111,16 +134,13 @@ function App() {
               <Button onClick={handleGuess}>Guess</Button>
           </HStack>
       </header>
-        <div className='App-body' style={{marginTop:0}}>
-            <Table>
-                <Thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>College</th>
-                        <th>Result</th>
-                    </tr>
-                </Thead>
-            </Table>
+      <div className='App-body'>
+        <div>
+            <VStack spacing={4}>
+                {renderGuesses()}
+            </VStack>
+
+        </div>
         </div>
     </div>
   );
