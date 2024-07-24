@@ -2,7 +2,7 @@
 import './App.css';
 import React from 'react';
 import { useEffect, useState } from 'react';
-import {Button , HStack, VStack} from "@chakra-ui/react";
+import {Button , HStack, Modal, Alert, Text, ModalBody, ModalOverlay, ModalContent} from "@chakra-ui/react";
 import {
     AutoComplete,
     AutoCompleteInput,
@@ -10,20 +10,20 @@ import {
     AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 import PickSelection from './pick-selection/PickSelection';
-import { render } from '@testing-library/react';
-
-const GREY = 'grey';
-const GREEN = 'green-500';
-const YELLOW = 'yellow'
 
 function App() {
+  const TESTING = false;
+  const NUM_ROUNDS = 8;
   const [poeltlPlayer, setPoeltlPlayer] = useState("");
   const [guessedPlayer, setGuessedPlayer] = useState("");
+  const [guessDisabled, setGuessDisabled] = useState(true);
+  const [round, setRound] = useState(0);
+  const [won, setWon] = useState(false);
   const [hint, setHint] = useState("");
   const [selected, setSelected] = useState("");                                                                                                     
   const [guesses, setGuesses] = useState([]);
-  const [gameFinished, setGameFinished] = useState(false);
   const [options, setOptions] = useState([]);
+  const [submitGuessLoading, setSubmitGuessLoading] = useState(false);
 
   function fetchPoeltlPlayer() {
       fetch('/api/get_poeltl_player').then(res=>
@@ -38,7 +38,7 @@ function App() {
   }
 
   function handleGuess(){
-    if (selected !== ""){
+        setSubmitGuessLoading(true);
         fetch('/api/guess_player', {
             method: 'POST',
             headers: {
@@ -63,19 +63,21 @@ function App() {
                             value: selected,
                             score: "GREY"
                         }
-                        setGameFinished(false)
+                        setRound(round + 1)
                     } else {
                         player_name = {
                             value: selected,
                             score: "GREEN"
                         };
-                         setGameFinished(true)
+                         setWon(true);
+                         setRound(NUM_ROUNDS);
                     }
                     guess['player_name'] = player_name;
                     setGuesses(guesses => [...guesses, guess]);
                 }
-            ));
-    }
+            )).finally(() => {
+                setSubmitGuessLoading(false);
+            });
   }
 
   useEffect(()=> {
@@ -102,47 +104,80 @@ function App() {
 
     function renderGuesses(){
         return guesses.map((guess, index) => {
+            const new_index = index + 1;
             return (
-                <PickSelection pickNumber={index + 1} guess={guess} />
+                <div style={{ gridColumn: `1 / span 1`, gridRow: `${new_index} / span 1` }}>
+                <PickSelection pickNumber={new_index} guess={guess} />
+                </div>
             );
         });
     }
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Poeltl player is {poeltlPlayer} from {hint}
-        </p>
-          <HStack>
-              <AutoComplete color="black" openOnFocus onSelectOption={(params) => {
-                console.log(params);
-                setSelected(params.item.value)}}>
-                  <AutoCompleteInput color="black" variant="filled" onChange={(event) => {setGuessedPlayer(event.target.value)}} />
-                  <AutoCompleteList color="black">
-                      {options.map((option) => (
-                          <AutoCompleteItem
-                              key={option}
-                              value={option}
-                              textTransform="capitalize"
-                          >
-                              {option}
-                          </AutoCompleteItem>
-                      ))}
-                  </AutoCompleteList>
-              </AutoComplete>
-              <Button onClick={handleGuess}>Guess</Button>
-          </HStack>
-      </header>
-      <div className='App-body'>
-        <div>
-            <VStack spacing={4}>
-                {renderGuesses()}
-            </VStack>
+    function resetGame(){
+        setGuesses([]);
+        setRound(0);
+        setWon(false);
+        fetchPoeltlPlayer();
+    }
 
-        </div>
-        </div>
+  return (
+    <div className="App">  
+    <header className="App-header">
+        {TESTING && <p>{poeltlPlayer}</p>}  
+        <p>  
+            Guess the player based on draft stats!  
+        </p>  
+        <HStack>  
+            <AutoComplete color="black" openOnFocus onSelectOption={(params) => {  
+                console.log(params);  
+                setGuessDisabled(false);  
+                setSelected(params.item.value)}}>  
+                <AutoCompleteInput color="black" variant="filled" onChange={(event) => {  
+                    setGuessedPlayer(event.target.value)}} />  
+                <AutoCompleteList color="black"
+                style={{ position: 'absolute', zIndex: 1 }}
+                >  
+                    {options.map((option) => (  
+                        <AutoCompleteItem  
+                            key={option}  
+                            value={option}  
+                            textTransform="capitalize"  
+                        >  
+                            {option}  
+                        </AutoCompleteItem>  
+                    ))}  
+                </AutoCompleteList>  
+            </AutoComplete>  
+            <Button isLoading={submitGuessLoading} onClick={handleGuess} isDisabled={guessDisabled}>Guess</Button>  
+        </HStack>
+        <div style={{ paddingTop: '125px'}}>  
+                {renderGuesses()}  
+        </div>  
+        <Modal isOpen={round === NUM_ROUNDS} isCentered style={{ width: '25%', height: '25%' }}>  
+            <ModalOverlay />  
+            <ModalContent   
+                color="white"   
+                backgroundColor="teal"   
+                mx="auto"  
+                display="flex"  
+                justifyContent="center"   
+                alignItems="center">  
+
+                <ModalBody>  
+                <Text textAlign="center" mb={4}>  
+                    {won ? `Congrats! You successfully guessed ${poeltlPlayer}` : `Nice Try! The player was ${poeltlPlayer}`}  
+                </Text>  
+
+                <Button colorScheme="teal" onClick={()=> {resetGame()}}>  
+                    Play Again  
+                </Button>  
+                </ModalBody>  
+            </ModalContent>  
+        </Modal>     
+    </header>  
+    <div className='App-body'>  
     </div>
+    </div>  
   );
 }
 
