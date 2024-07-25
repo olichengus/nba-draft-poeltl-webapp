@@ -10,6 +10,7 @@ import {
     AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 import PickSelection from './pick-selection/PickSelection';
+import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
   const TESTING = false;
@@ -57,6 +58,7 @@ function App() {
                     const result = data.result;
                     let player_name;
                     if (typeof guess === 'string'){
+                        toast.error(guess);
                         return ;
                     } else if (result === 'wrong'){
                         player_name = {
@@ -102,16 +104,18 @@ function App() {
         }
     
 
-    function renderGuesses(){
-        return guesses.map((guess, index) => {
-            const new_index = index + 1;
-            return (
-                <div style={{ gridColumn: `1 / span 1`, gridRow: `${new_index} / span 1` }}>
-                <PickSelection pickNumber={new_index} guess={guess} />
-                </div>
-            );
-        });
-    }
+        function renderGuesses(){  
+            return guesses.map((guess, index) => {  
+                const column = Math.floor(index / 4) + 1; // increases after every 4 elements  
+                const row = index % 4 + 1; // alternates between 1 and 4  
+                
+                return (  
+                    <div style={{ gridColumn: `${column} / span 1`, gridRow: `${row} / span 1` }}>  
+                    <PickSelection pickNumber={index+1} guess={guess} />  
+                    </div>  
+                );  
+            });  
+        }  
 
     function resetGame(){
         setGuesses([]);
@@ -123,39 +127,47 @@ function App() {
   return (
     <div className="App">  
     <header className="App-header">
+        <Toaster position='top-right'/>
         {TESTING && <p>{poeltlPlayer}</p>}  
         <p>  
             Guess the player based on draft stats!  
         </p>
-        <div>
-            <HStack>  
-                <AutoComplete color="black" openOnFocus onSelectOption={(params) => {  
-                    console.log(params);  
-                    setGuessDisabled(false);  
-                    setSelected(params.item.value)}}>  
-                    <AutoCompleteInput color="black" variant="filled" onChange={(event) => {  
-                        setGuessedPlayer(event.target.value)}} />  
-                    <AutoCompleteList color="black"
-                    style={{ position: 'absolute', zIndex: 1 }}
-                    >  
-                        {options.map((option) => (  
-                            <AutoCompleteItem  
-                                key={option}  
-                                value={option}  
-                                textTransform="capitalize"  
-                            >  
-                                {option}  
-                            </AutoCompleteItem>  
-                        ))}  
-                    </AutoCompleteList>  
-                </AutoComplete>  
-                <Button isLoading={submitGuessLoading} onClick={handleGuess} isDisabled={guessDisabled}>Guess</Button>  
-            </HStack>
+        {round !== NUM_ROUNDS && 
+            <div style={{zIndex: 1 }}>
+                <HStack>  
+                    <AutoComplete color="black" openOnFocus onSelectOption={(params) => {  
+                        console.log(params);  
+                        setGuessDisabled(false);  
+                        setSelected(params.item.value)}}>  
+                        <AutoCompleteInput color="black" variant="filled" onChange={(event) => {  
+                            setGuessedPlayer(event.target.value)}} />  
+                        <AutoCompleteList color="black"
+                        >  
+                            {options.map((option) => (  
+                                <AutoCompleteItem  
+                                    key={option}  
+                                    value={option}  
+                                    textTransform="capitalize"  
+                                >  
+                                    {option}  
+                                </AutoCompleteItem>  
+                            ))}  
+                        </AutoCompleteList>  
+                    </AutoComplete>  
+                    <Button isLoading={submitGuessLoading} onClick={handleGuess} isDisabled={guessDisabled}>Guess</Button>  
+                </HStack>
+            </div>}
+        <div style={{   
+            paddingTop: '25px',   
+            zIndex: 0,   
+            display: 'grid',   
+            gridTemplateColumns: '1fr 1fr', // For 2 columns   
+            gridTemplateRows: '1fr 1fr 1fr 1fr' // For 4 rows   
+        }}>  
+            {renderGuesses()}  
         </div>
-        <div style={{ paddingTop: '125px'}}>  
-                {renderGuesses()}  
-        </div>  
-        <Modal isOpen={round === NUM_ROUNDS} isCentered style={{ width: '25%', height: '25%' }}>  
+        <div style={{zIndex: 2}}>
+        <Modal isOpen={round === NUM_ROUNDS} isCentered style={{ width: '25%', height: '25%'}}>  
             <ModalOverlay />  
             <ModalContent   
                 color="white"   
@@ -175,7 +187,8 @@ function App() {
                 </Button>  
                 </ModalBody>  
             </ModalContent>  
-        </Modal>     
+        </Modal>
+        </div>    
     </header>  
     <div className='App-body'>  
     </div>
