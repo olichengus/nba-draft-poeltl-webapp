@@ -126,30 +126,32 @@ function App() {
         {TESTING && <p>{poeltlPlayer}</p>}  
         <p>  
             Guess the player based on draft stats!  
-        </p>  
-        <HStack>  
-            <AutoComplete color="black" openOnFocus onSelectOption={(params) => {  
-                console.log(params);  
-                setGuessDisabled(false);  
-                setSelected(params.item.value)}}>  
-                <AutoCompleteInput color="black" variant="filled" onChange={(event) => {  
-                    setGuessedPlayer(event.target.value)}} />  
-                <AutoCompleteList color="black"
-                style={{ position: 'absolute', zIndex: 1 }}
-                >  
-                    {options.map((option) => (  
-                        <AutoCompleteItem  
-                            key={option}  
-                            value={option}  
-                            textTransform="capitalize"  
-                        >  
-                            {option}  
-                        </AutoCompleteItem>  
-                    ))}  
-                </AutoCompleteList>  
-            </AutoComplete>  
-            <Button isLoading={submitGuessLoading} onClick={handleGuess} isDisabled={guessDisabled}>Guess</Button>  
-        </HStack>
+        </p>
+        <div>
+            <HStack>  
+                <AutoComplete color="black" openOnFocus onSelectOption={(params) => {  
+                    console.log(params);  
+                    setGuessDisabled(false);  
+                    setSelected(params.item.value)}}>  
+                    <AutoCompleteInput color="black" variant="filled" onChange={(event) => {  
+                        setGuessedPlayer(event.target.value)}} />  
+                    <AutoCompleteList color="black"
+                    style={{ position: 'absolute', zIndex: 1 }}
+                    >  
+                        {options.map((option) => (  
+                            <AutoCompleteItem  
+                                key={option}  
+                                value={option}  
+                                textTransform="capitalize"  
+                            >  
+                                {option}  
+                            </AutoCompleteItem>  
+                        ))}  
+                    </AutoCompleteList>  
+                </AutoComplete>  
+                <Button isLoading={submitGuessLoading} onClick={handleGuess} isDisabled={guessDisabled}>Guess</Button>  
+            </HStack>
+        </div>
         <div style={{ paddingTop: '125px'}}>  
                 {renderGuesses()}  
         </div>  

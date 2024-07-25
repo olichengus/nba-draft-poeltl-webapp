@@ -10,7 +10,7 @@ export function PickSelection({pickNumber, guess}) {
         <div>
                 <Card
                     w={'100%'}
-                    h={'100%'}
+                    h={'50%'}
                     backgroundColor="black"   
                     borderColor="white"   
                     borderWidth="1px"
