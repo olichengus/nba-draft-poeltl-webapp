@@ -27,7 +27,7 @@ function App() {
   const [submitGuessLoading, setSubmitGuessLoading] = useState(false);
 
   function fetchPoeltlPlayer() {
-      fetch('/api/get_poeltl_player').then(res=>
+      fetch('https://draft-poeltl-backend-production.up.railway.app/api/get_poeltl_player').then(res=>
           res.json()).then(
               data=>{
              console.log(data);
@@ -40,7 +40,7 @@ function App() {
 
   function handleGuess(){
         setSubmitGuessLoading(true);
-        fetch('/api/guess_player', {
+        fetch('https://draft-poeltl-backend-production.up.railway.app/api/guess_player', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ function App() {
     },[guessedPlayer]);
 
     function fetchPlayerOptions(player_search){
-        return fetch(`/api/get_players?player_full_name=${player_search}`)
+        return fetch(`https://draft-poeltl-backend-production.up.railway.app/api/get_players?player_full_name=${player_search}`)
             .then(res => res.json())
             .then(data => {
                 setOptions(data.data);
